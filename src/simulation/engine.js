@@ -14,6 +14,7 @@ const INTERACTION_RADIUS = 2.2
 const INTERACTION_DURATION_TICKS = 4
 const REJECTION_MEMORY_TICKS = 20
 const MOVE_SPEED = 0.8 // unidades por tick
+const MIN_AGENT_DIST = 1.5 // distancia mínima entre agentes (evita superposición)
 
 // Agentes que están actualmente interactuando juntos
 const activeInteractionPairs = new Map() // "id1-id2" => ticksRemaining
@@ -119,13 +120,30 @@ function tick() {
   store.getState().agents.forEach(agent => {
     if (agent.state === 'interacting' || agent.state === 'recovering') return
 
-    // Si tiene targetId, actualizar targetPosition al target actual
+    // Si tiene targetId, calcular posición de parada a MIN_AGENT_DIST del target
     let effectiveTarget = agent.targetPosition
     if (agent.targetId) {
       const targetAgent = store.getState().agents.find(a => a.id === agent.targetId)
       if (targetAgent) {
-        effectiveTarget = [...targetAgent.position]
-        // Actualizar state a approaching cuando se mueve hacia alguien
+        const dx = agent.position[0] - targetAgent.position[0]
+        const dz = agent.position[2] - targetAgent.position[2]
+        const d = Math.sqrt(dx * dx + dz * dz) || 1
+
+        if (d <= MIN_AGENT_DIST) {
+          // Ya está lo suficientemente cerca — no mover más
+          if (agent.state === 'seeking') {
+            store.getState().updateAgent(agent.id, { state: 'approaching' })
+          }
+          return
+        }
+
+        // Parar a MIN_AGENT_DIST del centro del target
+        effectiveTarget = [
+          targetAgent.position[0] + (dx / d) * MIN_AGENT_DIST,
+          0,
+          targetAgent.position[2] + (dz / d) * MIN_AGENT_DIST,
+        ]
+
         if (agent.state === 'seeking') {
           store.getState().updateAgent(agent.id, { state: 'approaching', targetPosition: effectiveTarget })
         } else {
@@ -137,7 +155,7 @@ function tick() {
     if (!effectiveTarget) return
 
     const newPos = stepToward(agent.position, effectiveTarget, MOVE_SPEED)
-    const arrived = dist({ position: newPos }, { position: effectiveTarget }) < 0.5
+    const arrived = dist({ position: newPos }, { position: effectiveTarget }) < 0.3
     store.getState().updateAgent(agent.id, {
       position: newPos,
       ...(arrived && !agent.targetId ? { targetPosition: null } : {}),

@@ -19,6 +19,7 @@ export default function AgentLabel({ name, state }) {
       position={[0, 1.6, 0]}
       className="agent-label"
       style={{ pointerEvents: 'none' }}
+      zIndexRange={[10, 0]}
     >
       <div style={{
         display: 'flex',
