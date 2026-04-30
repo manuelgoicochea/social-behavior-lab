@@ -5,6 +5,10 @@ const MAX_EVENTS = 200
 const MAX_FRAMES = 3000
 
 export const useSimulationStore = create((set, get) => ({
+  // Idioma
+  language: 'es', // 'es' | 'en'
+  setLanguage: (language) => set({ language }),
+
   // Vista actual
   currentView: 'landing', // 'landing' | 'simulation' | 'editor'
   setView: (view) => set({ currentView: view }),

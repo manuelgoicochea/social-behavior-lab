@@ -1,13 +1,14 @@
 import { useState } from 'react'
 import { useSimulationStore } from '../store/simulationStore.js'
 import { PERSONALITIES, createAgent } from '../simulation/personalities.js'
+import { useT, useLanguage } from '../i18n/useT.js'
 
 const EMOTION_KEYS = [
-  { key: 'soledad', label: 'Soledad', color: '#60a5fa' },
-  { key: 'sociabilidad', label: 'Sociabilidad', color: '#4ade80' },
-  { key: 'ansiedad', label: 'Ansiedad', color: '#fb923c' },
-  { key: 'confianza', label: 'Confianza', color: '#facc15' },
-  { key: 'energiaSocial', label: 'Energía social', color: '#a78bfa' },
+  { key: 'soledad', color: '#60a5fa' },
+  { key: 'sociabilidad', color: '#4ade80' },
+  { key: 'ansiedad', color: '#fb923c' },
+  { key: 'confianza', color: '#facc15' },
+  { key: 'energiaSocial', color: '#a78bfa' },
 ]
 
 const PRESET_COLORS = [
@@ -16,12 +17,13 @@ const PRESET_COLORS = [
 ]
 
 export default function CharacterEditor() {
+  const t = useT()
+  const { language, setLanguage } = useLanguage()
   const agents = useSimulationStore(s => s.agents)
   const editAgent = useSimulationStore(s => s.editAgent)
   const addAgent = useSimulationStore(s => s.addAgent)
   const removeAgent = useSimulationStore(s => s.removeAgent)
   const setView = useSimulationStore(s => s.setView)
-  const loadExperiment = useSimulationStore(s => s.loadExperiment)
 
   const [selectedId, setSelectedId] = useState(agents[0]?.id || null)
   const selected = agents.find(a => a.id === selectedId)
@@ -57,37 +59,46 @@ export default function CharacterEditor() {
     setSelectedId(agent.id)
   }
 
-  function handleStartSimulation() {
-    setView('simulation')
-  }
-
   return (
     <div className="min-h-screen bg-gray-950 text-white flex flex-col">
-      {/* Header */}
       <div className="border-b border-gray-800 px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <button
             onClick={() => setView('landing')}
             className="text-gray-500 hover:text-gray-300 transition-colors text-sm"
           >
-            ← Inicio
+            {t('editor.back')}
           </button>
           <span className="text-gray-700">/</span>
-          <h1 className="text-lg font-bold text-white">Editor de personajes</h1>
+          <h1 className="text-lg font-bold text-white">{t('editor.title')}</h1>
         </div>
-        <button
-          onClick={handleStartSimulation}
-          className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-violet-600 hover:from-blue-500 hover:to-violet-500 text-white text-sm font-semibold rounded-xl transition-all"
-        >
-          ▶ Iniciar simulación
-        </button>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1 bg-gray-900 border border-gray-800 rounded-lg p-1">
+            {['es', 'en'].map(lang => (
+              <button
+                key={lang}
+                onClick={() => setLanguage(lang)}
+                className={`px-3 py-1 text-xs font-semibold rounded-md transition-all uppercase ${
+                  language === lang ? 'bg-indigo-600 text-white' : 'text-gray-500 hover:text-gray-300'
+                }`}
+              >
+                {lang}
+              </button>
+            ))}
+          </div>
+          <button
+            onClick={() => setView('simulation')}
+            className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-violet-600 hover:from-blue-500 hover:to-violet-500 text-white text-sm font-semibold rounded-xl transition-all"
+          >
+            {t('editor.startSim')}
+          </button>
+        </div>
       </div>
 
       <div className="flex flex-1 overflow-hidden">
-        {/* Lista de agentes */}
         <div className="w-64 border-r border-gray-800 flex flex-col">
           <div className="p-4 border-b border-gray-800 flex items-center justify-between">
-            <span className="text-sm font-semibold text-gray-300">Personajes ({agents.length}/6)</span>
+            <span className="text-sm font-semibold text-gray-300">{t('editor.characters')} ({agents.length}/6)</span>
             <button
               onClick={handleAddAgent}
               disabled={agents.length >= 6}
@@ -115,7 +126,7 @@ export default function CharacterEditor() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-semibold text-white truncate">{agent.name}</div>
-                  <div className="text-xs text-gray-500 capitalize">{agent.personality}</div>
+                  <div className="text-xs text-gray-500">{t('personality.' + agent.personality)}</div>
                 </div>
                 {agents.length > 2 && (
                   <button
@@ -134,12 +145,10 @@ export default function CharacterEditor() {
           </div>
         </div>
 
-        {/* Editor del agente seleccionado */}
         {selected ? (
           <div className="flex-1 overflow-y-auto p-6 space-y-6">
-            {/* Nombre */}
             <div>
-              <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Nombre</label>
+              <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">{t('editor.name')}</label>
               <input
                 type="text"
                 value={selected.name}
@@ -149,9 +158,8 @@ export default function CharacterEditor() {
               />
             </div>
 
-            {/* Color */}
             <div>
-              <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Color</label>
+              <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">{t('editor.color')}</label>
               <div className="flex items-center gap-2 flex-wrap">
                 {PRESET_COLORS.map(c => (
                   <button
@@ -164,9 +172,8 @@ export default function CharacterEditor() {
               </div>
             </div>
 
-            {/* Personalidad preset */}
             <div>
-              <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Personalidad base</label>
+              <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">{t('editor.personality')}</label>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 {Object.values(PERSONALITIES).map(p => (
                   <button
@@ -180,21 +187,20 @@ export default function CharacterEditor() {
                   >
                     <div className="flex items-center gap-2">
                       <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: p.color }} />
-                      {p.label}
+                      {t('personality.' + p.key)}
                     </div>
                   </button>
                 ))}
               </div>
             </div>
 
-            {/* Sliders emocionales */}
             <div>
-              <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Variables emocionales</label>
+              <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">{t('editor.emotions')}</label>
               <div className="space-y-4">
-                {EMOTION_KEYS.map(({ key, label, color }) => (
+                {EMOTION_KEYS.map(({ key, color }) => (
                   <div key={key}>
                     <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-sm text-gray-300">{label}</span>
+                      <span className="text-sm text-gray-300">{t('emotion.' + key)}</span>
                       <span className="text-sm font-mono font-bold" style={{ color }}>
                         {Math.round(selected.emotion[key])}
                       </span>
@@ -214,18 +220,17 @@ export default function CharacterEditor() {
               </div>
             </div>
 
-            {/* Descripción personalidad */}
             {PERSONALITIES[selected.personality] && (
               <div className="bg-gray-900 border border-gray-800 rounded-xl px-4 py-3">
                 <p className="text-xs text-gray-500 leading-relaxed">
-                  {PERSONALITIES[selected.personality].description}
+                  {t('personality.desc.' + selected.personality)}
                 </p>
               </div>
             )}
           </div>
         ) : (
           <div className="flex-1 flex items-center justify-center text-gray-600">
-            Selecciona un personaje para editarlo
+            {t('editor.select')}
           </div>
         )}
       </div>

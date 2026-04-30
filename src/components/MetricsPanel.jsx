@@ -1,4 +1,7 @@
+import { useT } from '../i18n/useT.js'
+
 export default function MetricsPanel({ metrics, onClose }) {
+  const t = useT()
   if (!metrics) return null
 
   const { totalInteractions, totalRejections, avgInteractionDuration, mostSocial, mostIsolated, mostAnxious, bestPair, narrative } = metrics
@@ -6,11 +9,10 @@ export default function MetricsPanel({ metrics, onClose }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
       <div className="bg-gray-900 border border-gray-700 rounded-2xl shadow-2xl max-w-xl w-full max-h-[90vh] overflow-y-auto">
-        {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-gray-800">
           <div>
-            <h2 className="text-xl font-bold text-white">Resultados del experimento</h2>
-            <p className="text-sm text-gray-500 mt-0.5">Resumen de la simulación</p>
+            <h2 className="text-xl font-bold text-white">{t('metrics.title')}</h2>
+            <p className="text-sm text-gray-500 mt-0.5">{t('metrics.subtitle')}</p>
           </div>
           <button
             onClick={onClose}
@@ -21,14 +23,13 @@ export default function MetricsPanel({ metrics, onClose }) {
         </div>
 
         <div className="p-6 space-y-6">
-          {/* Métricas numéricas */}
           <div className="grid grid-cols-2 gap-3">
-            <MetricCard label="Interacciones" value={totalInteractions} icon="🤝" color="green" />
-            <MetricCard label="Rechazos" value={totalRejections} icon="🚫" color="red" />
-            <MetricCard label="Duración media" value={`${avgInteractionDuration}s`} icon="⏱" color="blue" />
+            <MetricCard label={t('metrics.interactions')} value={totalInteractions} icon="🤝" color="green" />
+            <MetricCard label={t('metrics.rejections')} value={totalRejections} icon="🚫" color="red" />
+            <MetricCard label={t('metrics.avgDuration')} value={`${avgInteractionDuration}s`} icon="⏱" color="blue" />
             {mostAnxious && (
               <MetricCard
-                label="Mayor ansiedad"
+                label={t('metrics.highestAnxiety')}
                 value={`${mostAnxious.name} (${Math.round(mostAnxious.emotion.ansiedad)})`}
                 icon="😰"
                 color="orange"
@@ -36,50 +37,44 @@ export default function MetricsPanel({ metrics, onClose }) {
             )}
           </div>
 
-          {/* Agentes destacados */}
           <div className="space-y-3">
             {mostSocial && (
               <AgentHighlight
-                label="Agente más social"
+                label={t('metrics.mostSocial')}
                 agent={mostSocial}
                 icon="🌟"
                 colorClass="border-green-700/40 bg-green-950/30"
+                t={t}
               />
             )}
             {mostIsolated && mostIsolated.id !== mostSocial?.id && (
               <AgentHighlight
-                label="Agente más aislado"
+                label={t('metrics.mostIsolated')}
                 agent={mostIsolated}
                 icon="🧍"
                 colorClass="border-gray-700/40 bg-gray-900/60"
+                t={t}
               />
             )}
             {bestPair && (
               <div className="rounded-xl border border-blue-700/40 bg-blue-950/30 px-4 py-3">
                 <div className="text-xs text-blue-400 font-semibold uppercase tracking-wider mb-1">
-                  💙 Mejor vínculo
+                  💙 {t('metrics.bestBond')}
                 </div>
                 <div className="flex items-center gap-2">
-                  <span
-                    className="w-3 h-3 rounded-full flex-shrink-0"
-                    style={{ background: bestPair.agentA.color }}
-                  />
+                  <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ background: bestPair.agentA.color }} />
                   <span className="text-white text-sm font-medium">{bestPair.agentA.name}</span>
-                  <span className="text-gray-500 text-xs">y</span>
-                  <span
-                    className="w-3 h-3 rounded-full flex-shrink-0"
-                    style={{ background: bestPair.agentB.color }}
-                  />
+                  <span className="text-gray-500 text-xs">{t('metrics.and')}</span>
+                  <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ background: bestPair.agentB.color }} />
                   <span className="text-white text-sm font-medium">{bestPair.agentB.name}</span>
-                  <span className="text-gray-500 text-xs ml-auto">{bestPair.count} veces</span>
+                  <span className="text-gray-500 text-xs ml-auto">{bestPair.count} {t('metrics.times')}</span>
                 </div>
               </div>
             )}
           </div>
 
-          {/* Narrativa */}
           <div className="bg-indigo-950/30 border border-indigo-800/30 rounded-xl px-5 py-4">
-            <div className="text-xs text-indigo-400 font-semibold uppercase tracking-wider mb-2">📝 Resumen narrativo</div>
+            <div className="text-xs text-indigo-400 font-semibold uppercase tracking-wider mb-2">📝 {t('metrics.narrative')}</div>
             <p className="text-gray-300 text-sm leading-relaxed">{narrative}</p>
           </div>
         </div>
@@ -89,7 +84,7 @@ export default function MetricsPanel({ metrics, onClose }) {
             onClick={onClose}
             className="w-full py-3 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 font-medium rounded-xl transition-all"
           >
-            Cerrar
+            {t('metrics.close')}
           </button>
         </div>
       </div>
@@ -113,7 +108,7 @@ function MetricCard({ label, value, icon, color }) {
   )
 }
 
-function AgentHighlight({ label, agent, icon, colorClass }) {
+function AgentHighlight({ label, agent, icon, colorClass, t }) {
   return (
     <div className={`rounded-xl border px-4 py-3 ${colorClass}`}>
       <div className="text-xs text-gray-400 font-semibold uppercase tracking-wider mb-1.5">
@@ -122,7 +117,7 @@ function AgentHighlight({ label, agent, icon, colorClass }) {
       <div className="flex items-center gap-2">
         <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ background: agent.color }} />
         <span className="text-white text-sm font-semibold">{agent.name}</span>
-        <span className="text-gray-500 text-xs capitalize">({agent.personality})</span>
+        <span className="text-gray-500 text-xs capitalize">({t('personality.' + agent.personality)})</span>
       </div>
     </div>
   )

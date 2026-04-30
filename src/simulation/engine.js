@@ -65,7 +65,8 @@ function tick() {
       // Emitir fin de interacción
       store.getState().addEvent({
         type: 'interaction_end',
-        message: `${data.nameA} y ${data.nameB} terminaron de hablar.`,
+        key: 'event.interaction_end',
+        params: { nameA: data.nameA, nameB: data.nameB },
         agentId: data.idA,
         targetId: data.idB,
         duration: INTERACTION_DURATION_TICKS,
@@ -221,7 +222,8 @@ function tick() {
 
           store.getState().addEvent({
             type: 'interaction_accepted',
-            message: `${agentA.name} y ${agentB.name} empezaron a hablar. La confianza de ambos aumentó.`,
+            key: 'event.interaction_accepted',
+            params: { nameA: agentA.name, nameB: agentB.name },
             agentId: agentA.id,
             targetId: agentB.id,
             color: 'green',
@@ -262,7 +264,8 @@ function tick() {
 
           store.getState().addEvent({
             type: 'interaction_rejected',
-            message: `${agentB.name} rechazó a ${agentA.name}. La ansiedad de ${agentA.name} aumentó.`,
+            key: 'event.interaction_rejected',
+            params: { nameA: agentA.name, nameB: agentB.name },
             agentId: agentA.id,
             targetId: agentB.id,
             color: 'red',
