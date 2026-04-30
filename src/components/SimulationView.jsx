@@ -153,8 +153,8 @@ export default function SimulationView() {
 
           {/* Overlay estado idle */}
           {status === 'idle' && (
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <div className="bg-gray-900/80 border border-gray-700 rounded-2xl px-8 py-6 text-center max-w-sm pointer-events-auto">
+            <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none bg-gray-950/50">
+              <div className="bg-gray-900 border border-gray-700 rounded-2xl px-8 py-6 text-center max-w-sm pointer-events-auto">
                 <div className="text-4xl mb-3">🧬</div>
                 <h3 className="text-white font-bold text-lg mb-2">Simulación lista</h3>
                 <p className="text-gray-400 text-sm mb-4">

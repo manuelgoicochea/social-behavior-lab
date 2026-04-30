@@ -162,10 +162,13 @@ function tick() {
     })
   })
 
-  // 6. Re-leer agentes actualizados para evaluar interacciones
+  // 6. Separación de colisión — empujar agentes que se solapan
+  applySeparation()
+
+  // 7. Re-leer agentes actualizados para evaluar interacciones
   const currentAgents = store.getState().agents
 
-  // 6. Evaluar interacciones por proximidad
+  // 7. Evaluar interacciones por proximidad
   for (let i = 0; i < currentAgents.length; i++) {
     const agentA = currentAgents[i]
     if (agentA.state !== 'seeking' && agentA.state !== 'approaching') continue
@@ -277,7 +280,7 @@ function tick() {
     }
   }
 
-  // 7. Capturar frame y avanzar tick
+  // 8. Capturar frame y avanzar tick
   store.getState().captureFrame()
   store.getState().incrementTick()
 }
@@ -292,6 +295,52 @@ function stepToward(current, target, speed) {
     0,
     current[2] + (dz / len) * speed,
   ]
+}
+
+const COLLISION_RADIUS = 1.2   // radio duro de colisión (cuerpo del agente)
+const ROOM_LIMIT = 7.5
+
+function applySeparation() {
+  const agents = store.getState().agents
+
+  // Acumular el vector de empuje de cada agente
+  const pushes = {}
+  agents.forEach(a => { pushes[a.id] = [0, 0] })
+
+  for (let i = 0; i < agents.length; i++) {
+    for (let j = i + 1; j < agents.length; j++) {
+      const a = agents[i]
+      const b = agents[j]
+
+      const dx = a.position[0] - b.position[0]
+      const dz = a.position[2] - b.position[2]
+      const d = Math.sqrt(dx * dx + dz * dz) || 0.01
+
+      if (d < COLLISION_RADIUS) {
+        // Fuerza inversamente proporcional a la distancia
+        const force = (COLLISION_RADIUS - d) / COLLISION_RADIUS
+        const nx = dx / d
+        const nz = dz / d
+        pushes[a.id][0] += nx * force
+        pushes[a.id][1] += nz * force
+        pushes[b.id][0] -= nx * force
+        pushes[b.id][1] -= nz * force
+      }
+    }
+  }
+
+  // Aplicar empujes
+  agents.forEach(agent => {
+    const [px, pz] = pushes[agent.id]
+    if (Math.abs(px) < 0.001 && Math.abs(pz) < 0.001) return
+
+    const newX = Math.max(-ROOM_LIMIT, Math.min(ROOM_LIMIT, agent.position[0] + px))
+    const newZ = Math.max(-ROOM_LIMIT, Math.min(ROOM_LIMIT, agent.position[2] + pz))
+
+    store.getState().updateAgent(agent.id, {
+      position: [newX, 0, newZ],
+    })
+  })
 }
 
 function applyEmotionDelta(emotion, delta) {
