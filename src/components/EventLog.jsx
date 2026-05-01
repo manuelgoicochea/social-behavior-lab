@@ -9,24 +9,26 @@ const COLOR_MAP = {
   blue:   { bg: 'bg-blue-950/40',   border: 'border-blue-800/40',   dot: 'bg-blue-400',   text: 'text-blue-300' },
 }
 
-export default function EventLog() {
+export default function EventLog({ hideHeader = false }) {
   const t = useT()
   const events = useSimulationStore(s => s.events)
   const status = useSimulationStore(s => s.status)
 
   return (
     <div className="flex flex-col h-full bg-gray-900/80 border border-gray-800 rounded-2xl overflow-hidden">
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-800">
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-semibold text-gray-200">{t('events.title')}</span>
-          {status === 'running' && (
-            <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-          )}
+      {!hideHeader && (
+        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-800">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-semibold text-gray-200">{t('events.title')}</span>
+            {status === 'running' && (
+              <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+            )}
+          </div>
+          <span className="text-xs text-gray-600">
+            {t('events.count', { n: events.length })}
+          </span>
         </div>
-        <span className="text-xs text-gray-600">
-          {t('events.count', { n: events.length })}
-        </span>
-      </div>
+      )}
 
       <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-2">
         {events.length === 0 ? (

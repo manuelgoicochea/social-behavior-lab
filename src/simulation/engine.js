@@ -370,6 +370,6 @@ function getOppositePosition(fromPos, toPos, distance = 5) {
 }
 
 export function computeFinalMetrics() {
-  const { agents, events } = store.getState()
-  return calculateMetrics(agents, events)
+  const { agents, events, language } = store.getState()
+  return calculateMetrics(agents, events, language)
 }

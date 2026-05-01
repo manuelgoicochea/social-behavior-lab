@@ -7,19 +7,19 @@ import {
   updateSpeed,
   computeFinalMetrics,
 } from '../simulation/engine.js'
-import { getFrameAtTick } from '../simulation/replay.js'
 import SimulationCanvas from './SimulationCanvas.jsx'
 import ControlPanel from './ControlPanel.jsx'
 import EventLog from './EventLog.jsx'
 import MetricsPanel from './MetricsPanel.jsx'
 import ExperimentSelector from './ExperimentSelector.jsx'
+import { useT, useLanguage } from '../i18n/useT.js'
 
 export default function SimulationView() {
-  const store = useSimulationStore
+  const t = useT()
+  const { language, setLanguage } = useLanguage()
   const status = useSimulationStore(s => s.status)
   const speed = useSimulationStore(s => s.speed)
   const replayFrames = useSimulationStore(s => s.replayFrames)
-  const replayTick = useSimulationStore(s => s.replayTick)
   const setReplayTick = useSimulationStore(s => s.setReplayTick)
   const startReplay = useSimulationStore(s => s.startReplay)
   const stopReplay = useSimulationStore(s => s.stopReplay)
@@ -27,21 +27,21 @@ export default function SimulationView() {
   const setMetrics = useSimulationStore(s => s.setMetrics)
   const metrics = useSimulationStore(s => s.metrics)
   const setView = useSimulationStore(s => s.setView)
+  const events = useSimulationStore(s => s.events)
 
   const [showMetrics, setShowMetrics] = useState(false)
   const [showExperiments, setShowExperiments] = useState(false)
   const [selectedAgent, setSelectedAgent] = useState(null)
+  const [showEvents, setShowEvents] = useState(false)
 
   const replayRef = useRef(null)
   const replayTickRef = useRef(0)
 
-  // Inicializar motor
   useEffect(() => {
     initEngine(useSimulationStore)
     return () => stopEngine()
   }, [])
 
-  // Reaccionar a cambios de status
   useEffect(() => {
     if (status === 'running') {
       startEngine()
@@ -52,14 +52,12 @@ export default function SimulationView() {
     }
   }, [status])
 
-  // Reaccionar a cambios de velocidad
   useEffect(() => {
     if (status === 'running') {
       updateSpeed(speed)
     }
   }, [speed, status])
 
-  // Loop de replay
   useEffect(() => {
     if (status !== 'replay') {
       if (replayRef.current) {
@@ -119,28 +117,44 @@ export default function SimulationView() {
           onClick={() => setView('landing')}
           className="flex items-center gap-1.5 text-gray-600 hover:text-gray-300 transition-colors text-sm flex-shrink-0"
         >
-          ← <span className="hidden sm:inline">Inicio</span>
+          ← <span className="hidden sm:inline">{t('sim.back').replace('← ', '')}</span>
         </button>
 
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           <ControlPanel
             onComputeMetrics={handleComputeMetrics}
             onReplay={handleReplayToggle}
           />
         </div>
 
-        <button
-          onClick={() => setShowExperiments(true)}
-          className="flex-shrink-0 px-3 py-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 text-sm font-medium rounded-xl transition-all"
-        >
-          🧪 Escenarios
-        </button>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <div className="hidden sm:flex items-center gap-1 bg-gray-900 border border-gray-800 rounded-lg p-1">
+            {['es', 'en'].map(lang => (
+              <button
+                key={lang}
+                onClick={() => setLanguage(lang)}
+                className={`px-2.5 py-1 text-xs font-semibold rounded-md transition-all uppercase ${
+                  language === lang ? 'bg-indigo-600 text-white' : 'text-gray-500 hover:text-gray-300'
+                }`}
+              >
+                {lang}
+              </button>
+            ))}
+          </div>
+
+          <button
+            onClick={() => setShowExperiments(true)}
+            className="px-3 py-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 text-sm font-medium rounded-xl transition-all"
+          >
+            🧪 <span className="hidden sm:inline">{t('ctrl.experiments')}</span>
+          </button>
+        </div>
       </div>
 
       {/* Main area */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex overflow-hidden relative">
         {/* Canvas 3D */}
-        <div className="flex-1 relative">
+        <div className="flex-1 relative min-w-0">
           <SimulationCanvas onAgentClick={setSelectedAgent} />
 
           {/* Overlay info agente seleccionado */}
@@ -148,6 +162,7 @@ export default function SimulationView() {
             <AgentInfoCard
               agentId={selectedAgent.id}
               onClose={() => setSelectedAgent(null)}
+              t={t}
             />
           )}
 
@@ -156,28 +171,66 @@ export default function SimulationView() {
             <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none bg-gray-950/50">
               <div className="bg-gray-900 border border-gray-700 rounded-2xl px-8 py-6 text-center max-w-sm pointer-events-auto">
                 <div className="text-4xl mb-3">🧬</div>
-                <h3 className="text-white font-bold text-lg mb-2">Simulación lista</h3>
+                <h3 className="text-white font-bold text-lg mb-2">{t('sim.ready.title')}</h3>
                 <p className="text-gray-400 text-sm mb-4">
-                  Presiona <strong className="text-white">Iniciar experimento</strong> para observar cómo interactúan los agentes.
+                  {t('sim.ready.desc', { btn: t('ctrl.start') })}
                 </p>
                 <button
                   onClick={() => setShowExperiments(true)}
                   className="text-indigo-400 hover:text-indigo-300 text-sm underline-offset-2 hover:underline"
                 >
-                  Cambiar escenario →
+                  {t('sim.ready.change')}
                 </button>
               </div>
             </div>
           )}
+
+          {/* Mobile events toggle button */}
+          <button
+            onClick={() => setShowEvents(v => !v)}
+            className="lg:hidden absolute bottom-4 right-4 z-10 flex items-center gap-2 px-4 py-2.5 bg-gray-900/95 border border-gray-700 rounded-xl shadow-lg text-gray-300 text-sm font-medium"
+          >
+            📋
+            <span>{t('events.title')}</span>
+            {events.length > 0 && (
+              <span className="w-5 h-5 flex items-center justify-center bg-indigo-600 text-white text-xs rounded-full font-bold">
+                {events.length > 99 ? '99+' : events.length}
+              </span>
+            )}
+          </button>
         </div>
 
-        {/* Panel lateral de eventos */}
-        <div className="w-72 flex-shrink-0 border-l border-gray-800 p-3">
+        {/* Panel lateral de eventos — desktop */}
+        <div className="hidden lg:block w-72 flex-shrink-0 border-l border-gray-800 p-3">
           <EventLog />
         </div>
+
+        {/* Panel de eventos — mobile drawer */}
+        {showEvents && (
+          <div className="lg:hidden absolute inset-0 z-30 flex flex-col">
+            <div
+              className="flex-1 bg-black/50"
+              onClick={() => setShowEvents(false)}
+            />
+            <div className="bg-gray-950 border-t border-gray-800 flex flex-col"
+              style={{ height: '55%' }}>
+              <div className="flex items-center justify-between px-4 py-3 border-b border-gray-800">
+                <span className="text-sm font-semibold text-gray-200">{t('events.title')}</span>
+                <button
+                  onClick={() => setShowEvents(false)}
+                  className="text-gray-500 hover:text-gray-300 text-lg leading-none"
+                >
+                  ✕
+                </button>
+              </div>
+              <div className="flex-1 overflow-hidden p-3">
+                <EventLog hideHeader />
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Modales */}
       {showMetrics && metrics && (
         <MetricsPanel metrics={metrics} onClose={() => setShowMetrics(false)} />
       )}
@@ -188,17 +241,17 @@ export default function SimulationView() {
   )
 }
 
-function AgentInfoCard({ agentId, onClose }) {
+function AgentInfoCard({ agentId, onClose, t }) {
   const agent = useSimulationStore(s => s.agents.find(a => a.id === agentId))
 
   if (!agent) return null
 
   const emotionItems = [
-    { label: 'Soledad', value: agent.emotion.soledad, color: '#60a5fa' },
-    { label: 'Sociabilidad', value: agent.emotion.sociabilidad, color: '#4ade80' },
-    { label: 'Ansiedad', value: agent.emotion.ansiedad, color: '#fb923c' },
-    { label: 'Confianza', value: agent.emotion.confianza, color: '#facc15' },
-    { label: 'Energía', value: agent.emotion.energiaSocial, color: '#a78bfa' },
+    { key: 'soledad', value: agent.emotion.soledad, color: '#60a5fa' },
+    { key: 'sociabilidad', value: agent.emotion.sociabilidad, color: '#4ade80' },
+    { key: 'ansiedad', value: agent.emotion.ansiedad, color: '#fb923c' },
+    { key: 'confianza', value: agent.emotion.confianza, color: '#facc15' },
+    { key: 'energiaSocial', value: agent.emotion.energiaSocial, color: '#a78bfa' },
   ]
 
   return (
@@ -210,12 +263,14 @@ function AgentInfoCard({ agentId, onClose }) {
         </div>
         <button onClick={onClose} className="text-gray-600 hover:text-gray-400 text-xs">✕</button>
       </div>
-      <div className="text-xs text-gray-500 capitalize mb-3">{agent.personality} · {agent.state}</div>
+      <div className="text-xs text-gray-500 capitalize mb-3">
+        {t('personality.' + agent.personality)} · {t('state.' + agent.state)}
+      </div>
       <div className="space-y-2">
-        {emotionItems.map(({ label, value, color }) => (
-          <div key={label}>
+        {emotionItems.map(({ key, value, color }) => (
+          <div key={key}>
             <div className="flex justify-between text-xs mb-1">
-              <span className="text-gray-400">{label}</span>
+              <span className="text-gray-400">{t('emotion.' + key)}</span>
               <span className="font-mono font-bold" style={{ color }}>{Math.round(value)}</span>
             </div>
             <div className="h-1.5 bg-gray-800 rounded-full overflow-hidden">
@@ -230,15 +285,15 @@ function AgentInfoCard({ agentId, onClose }) {
       <div className="mt-3 pt-3 border-t border-gray-800 grid grid-cols-3 gap-2 text-center">
         <div>
           <div className="text-white text-xs font-bold">{agent.history.interactions}</div>
-          <div className="text-gray-600 text-xs">interacc.</div>
+          <div className="text-gray-600 text-xs">{t('agent.interactions')}</div>
         </div>
         <div>
           <div className="text-white text-xs font-bold">{agent.history.accepted}</div>
-          <div className="text-gray-600 text-xs">aceptadas</div>
+          <div className="text-gray-600 text-xs">{t('agent.accepted')}</div>
         </div>
         <div>
           <div className="text-white text-xs font-bold">{agent.history.rejections}</div>
-          <div className="text-gray-600 text-xs">rechazos</div>
+          <div className="text-gray-600 text-xs">{t('agent.rejections')}</div>
         </div>
       </div>
     </div>
