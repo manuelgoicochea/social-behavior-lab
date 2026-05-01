@@ -8,6 +8,7 @@ import ControlPanel from './ControlPanel.jsx'
 import EventLog from './EventLog.jsx'
 import MetricsPanel from './MetricsPanel.jsx'
 import ExperimentSelector from './ExperimentSelector.jsx'
+import HelpPanel from './HelpPanel.jsx'
 import { useT, useLanguage } from '../i18n/useT.js'
 
 export default function SimulationView() {
@@ -25,10 +26,11 @@ export default function SimulationView() {
   const metrics      = useSimulationStore(s => s.metrics)
   const setView      = useSimulationStore(s => s.setView)
 
-  const [showMetrics, setShowMetrics]       = useState(false)
+  const [showMetrics, setShowMetrics]         = useState(false)
   const [showExperiments, setShowExperiments] = useState(false)
-  const [selectedAgent, setSelectedAgent]   = useState(null)
-  const [showEvents, setShowEvents]         = useState(false)
+  const [selectedAgent, setSelectedAgent]     = useState(null)
+  const [showEvents, setShowEvents]           = useState(false)
+  const [showHelp, setShowHelp]               = useState(false)
 
   const replayRef     = useRef(null)
   const replayTickRef = useRef(0)
@@ -113,6 +115,14 @@ export default function SimulationView() {
             className="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 text-xs sm:text-sm font-medium rounded-xl transition-all flex-shrink-0"
           >
             🧪 <span className="hidden sm:inline">{t('ctrl.experiments')}</span>
+          </button>
+
+          <button
+            onClick={() => setShowHelp(true)}
+            className="w-8 h-8 flex items-center justify-center bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-400 hover:text-white text-sm font-bold rounded-xl transition-all flex-shrink-0"
+            title="Ayuda / Help"
+          >
+            ?
           </button>
         </div>
 
@@ -209,6 +219,9 @@ export default function SimulationView() {
       )}
       {showExperiments && (
         <ExperimentSelector onClose={() => setShowExperiments(false)} />
+      )}
+      {showHelp && (
+        <HelpPanel onClose={() => setShowHelp(false)} />
       )}
     </div>
   )

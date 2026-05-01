@@ -95,7 +95,7 @@ export default function ControlPanel({ onComputeMetrics, onReplay }) {
           <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
             isRunning ? 'bg-green-400 animate-pulse' : isReplay ? 'bg-violet-400 animate-pulse' : 'bg-gray-600'
           }`} />
-          <span className="hidden sm:inline">{isReplay ? 'REPLAY' : formatTick(tick)}</span>
+          {isReplay ? 'REPLAY' : formatTick(tick)}
         </div>
       )}
 
